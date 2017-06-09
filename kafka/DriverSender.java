@@ -33,7 +33,7 @@ public class DriverSender implements Serializable{
 
 	private int id;
 	// private Party partyType;
-	private int type;
+	private String type;
 	private ArrayList<Location> route;
 	private Date startTime;
 	private Date endTime;
@@ -42,13 +42,6 @@ public class DriverSender implements Serializable{
 	private int space;
 	private int price;
 
-	/*
-	public enum Party
-	{
-		DRIVER,
-		SENDER
-	};
-	*/
 
 	DriverSender(int id, int type,
 			ArrayList<Location> route, 
@@ -59,7 +52,10 @@ public class DriverSender implements Serializable{
 			int price)
 	{
 		this.id = id;
-		this.type = type;
+		if(type == 0)
+			this.type = "DRIVER";
+		else
+			this.type = "SENDER";
 		this.route = route;
 		this.startTime = startTime;
 		this.endTime = endTime;
@@ -82,14 +78,20 @@ public class DriverSender implements Serializable{
 	@Override
 	public String toString() {
 
-		return id + ", " + type + "," + startTime + "," + endTime + "," + route + "," + space + "," + price + "," + getEventTime();
+		return id + ", " + type  + "," + startTime + "," + endTime + "," + route + "," + space + "," + price ;
 	}
 
 	public static void main(String [] args)
 	{
-		System.out.println("DriverSender producer done ");
+		System.out.println("DriverSender producer start ");
+		EventProducer producer = new EventProducer("DRIVER","SENDER");
+		producer.prod_message(0);
+		producer.prod_message(1);
+		producer.close();
+		System.out.println("EventProducer end");
 	}
 }
+
 
 class EventProducer
 {
@@ -106,6 +108,7 @@ class EventProducer
 
 	private static Properties createKafkaConfig() {
 		Properties props = new Properties();
+		// need to find what this localhost should be
 		props.put("bootstrap.servers", "localhost:9092");
 		props.put("broker.list", "localhost:9092");
 		props.put("group.id", "None");
@@ -137,11 +140,12 @@ class EventProducer
 		al.add(l);
 		if(type == 0)
 		{
-			DriverSender dr = new DriverSender(1,type,al,timeStart,timeStart,timeStart,10,10);
+			System.out.println("PRODUCE msg to DRIVER");
+			DriverSender dr = new DriverSender(0,type,al,timeStart,timeStart,timeStart,10,10);
 			int i = 0;
-			while(i < 10)
+			while(i < 1)
 			{
-				producer.send(new ProducerRecord<String,String>(this.driver_topic_name,al.toString()));
+				producer.send(new ProducerRecord<String,String>(this.driver_topic_name,dr.toString()));
 				System.out.println("EventProducer prod_message DRIVER ");
 				i++;
 			}
@@ -149,12 +153,13 @@ class EventProducer
 		else
 		{
 			// sender
-			DriverSender dr = new DriverSender(1,type,al,timeStart,timeStart,timeStart,10,10);
+			System.out.println("PRODUCE msg to SENDER");
+			DriverSender dr = new DriverSender(1,type,al,timeStart,timeStart,timeStart,5,5);
 			int i = 0;
-			while(i < 10)
+			while(i < 1)
 			{
-				producer.send(new ProducerRecord<String,String>(this.user_topic_name,al.toString()));
-				System.out.println("EventProducer prod_message DRIVER ");
+				producer.send(new ProducerRecord<String,String>(this.user_topic_name,dr.toString()));
+				System.out.println("EventProducer prod_message SENDER ");
 				i++;
 			}
 		}
@@ -162,10 +167,12 @@ class EventProducer
 
 	public static void main(String [] args)
 	{
+/*
 		EventProducer producer = new EventProducer("DRIVER","USER");
 		producer.prod_message(0);
 		producer.prod_message(1);
 		producer.close();
 		System.out.println("EventProducer pkg import succeed ");
+*/
 	}
 }
