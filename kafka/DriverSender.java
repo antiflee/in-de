@@ -27,10 +27,6 @@ class Location
 
 public class DriverSender implements Serializable{
 
-	/**
-	 * 
-	 */
-
 	private int id;
 	// private Party partyType;
 	private String type;
@@ -167,12 +163,5 @@ class EventProducer
 
 	public static void main(String [] args)
 	{
-/*
-		EventProducer producer = new EventProducer("DRIVER","USER");
-		producer.prod_message(0);
-		producer.prod_message(1);
-		producer.close();
-		System.out.println("EventProducer pkg import succeed ");
-*/
 	}
 }
