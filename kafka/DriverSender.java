@@ -1,6 +1,7 @@
 import java.io.Serializable;
 import java.util.Date;
 import java.util.ArrayList;
+import org.json.simple.JSONObject;
 
 
 import org.apache.kafka.clients.producer.KafkaProducer;
@@ -26,6 +27,10 @@ class Location
 }
 
 public class DriverSender implements Serializable{
+
+	/**
+	 * 
+	 */
 
 	private int id;
 	// private Party partyType;
@@ -74,16 +79,26 @@ public class DriverSender implements Serializable{
 	@Override
 	public String toString() {
 
-		return id + ", " + type  + "," + startTime + "," + endTime + "," + route + "," + space + "," + price ;
+  		JSONObject obj=new JSONObject();
+  		obj.put("id",new Integer(1));
+  		obj.put("stime",startTime);
+  		obj.put("etime",endTime);
+  		obj.put("space",new Integer(space));
+  		obj.put("price",new Integer(price));
+		return obj.toString();
+
+/*
+		return  "{id:" + "" + id + "," +  "stime: " +  startTime + "," + "etime:" + endTime + "," + "space:" + space + "," + "price:" + price + "}";
+*/
 	}
 
 	public static void main(String [] args)
 	{
 		System.out.println("DriverSender producer start ");
-		EventProducer producer = new EventProducer("DRIVER","SENDER");
-		producer.prod_message(0);
-		producer.prod_message(1);
-		producer.close();
+		EventProducer prod = new EventProducer("DRIVER","SENDER");
+		prod.prod_message(0);
+		prod.prod_message(1);
+		prod.close();
 		System.out.println("EventProducer end");
 	}
 }
@@ -132,14 +147,14 @@ class EventProducer
 		int space = 10;
 		int price = 10;
 		Location l = new Location(lat,lon);
-		ArrayList<Location> al = new ArrayList<>();
+		ArrayList<Location> al = new ArrayList<Location>();
 		al.add(l);
 		if(type == 0)
 		{
 			System.out.println("PRODUCE msg to DRIVER");
 			DriverSender dr = new DriverSender(0,type,al,timeStart,timeStart,timeStart,10,10);
 			int i = 0;
-			while(i < 1)
+			while(i < 10)
 			{
 				producer.send(new ProducerRecord<String,String>(this.driver_topic_name,dr.toString()));
 				System.out.println("EventProducer prod_message DRIVER ");
@@ -152,7 +167,7 @@ class EventProducer
 			System.out.println("PRODUCE msg to SENDER");
 			DriverSender dr = new DriverSender(1,type,al,timeStart,timeStart,timeStart,5,5);
 			int i = 0;
-			while(i < 1)
+			while(i < 10)
 			{
 				producer.send(new ProducerRecord<String,String>(this.user_topic_name,dr.toString()));
 				System.out.println("EventProducer prod_message SENDER ");
@@ -163,5 +178,12 @@ class EventProducer
 
 	public static void main(String [] args)
 	{
+/*
+		EventProducer producer = new EventProducer("DRIVER","USER");
+		producer.prod_message(0);
+		producer.prod_message(1);
+		producer.close();
+		System.out.println("EventProducer pkg import succeed ");
+*/
 	}
 }
