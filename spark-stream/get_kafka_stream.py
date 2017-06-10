@@ -12,16 +12,6 @@ from elasticsearch import Elasticsearch
 from elasticsearch import helpers
 '''
 
-#################################################################
-# To submit the job:
-#
-# park-submit --master local[*] --packages org.apache.spark:spark-streaming-kafka_2.10:1.6.1 --executor-memory 1G y.py
-# spark-submit --master spark://ec2-54-71-28-156.us-west-2.compute.amazonaws.com:7077 --packages org.apache.spark:spark-streaming-kafka_2.10:1.6.1 y.py
-# yarn application -kill APPID
-# SPARK_HOME_DIR/bin/spark-submit --master spark://ec2-54-71-28-156.us-west-2.compute.amazonaws.com:7077 --kill $DRIVER_ID
-#################################################################
-
-
 offsetRanges = []
 
 def extractEvent(x):
