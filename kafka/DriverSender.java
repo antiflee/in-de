@@ -35,34 +35,51 @@ public class DriverSender implements Serializable{
 	private int id;
 	// private Party partyType;
 	private String type;
-	private ArrayList<Location> route;
+	// private ArrayList<Location> route;
 	private Date startTime;
 	private Date endTime;
 	private Date eventTime;
 
 	private int space;
 	private int price;
+	private Double slat;
+	private Double slon;
+	private Double elat;
+	private Double elon;
+	private int review;
 
 
 	DriverSender(int id, int type,
-			ArrayList<Location> route, 
+			// ArrayList<Location> route, 
 			Date startTime,
 			Date endTime,
 			Date eventTime,
 			int space,
-			int price)
+			int price,
+			Double slat,
+			Double slon,
+			Double elat,
+			Double elon,
+			int review)
 	{
 		this.id = id;
 		if(type == 0)
 			this.type = "DRIVER";
 		else
 			this.type = "SENDER";
-		this.route = route;
+		// this.route = route;
 		this.startTime = startTime;
 		this.endTime = endTime;
 		this.eventTime = eventTime;
 		this.space = space;
 		this.price = price;
+
+		this.slat = slat;
+		this.slon = slon;
+
+		this.elat = elat;
+		this.elon = elon;
+		this.review = review;
 	}
 	
 	// price
@@ -80,11 +97,20 @@ public class DriverSender implements Serializable{
 	public String toString() {
 
   		JSONObject obj=new JSONObject();
-  		obj.put("id",new Integer(1));
-  		obj.put("stime",startTime);
-  		obj.put("etime",endTime);
+  		obj.put("id",new Integer(id));
+  		// obj.put("stime",new String(startTime.toString()));
+		// obj.put("etime", new String(endTime.toString()));
   		obj.put("space",new Integer(space));
-  		obj.put("price",new Integer(price));
+		if(type == "DRIVER")
+  			obj.put("price",new Integer(price));
+		if(type == "DRIVER")
+			obj.put("review",new Integer(review));
+		// obj.put("sloc", new String(" lat: " + slat + "," + "lon: " + slan + "")
+		obj.put("slat", new Double(slat));
+		obj.put("slon", new Double(slon));
+		// obj.put("eloc", new String(" lat: " + elat + "," + "lon: " + elan + "")
+		obj.put("dlat", new Double(elat));
+		obj.put("dlon", new Double(elon));
 		return obj.toString();
 
 /*
@@ -96,8 +122,10 @@ public class DriverSender implements Serializable{
 	{
 		System.out.println("DriverSender producer start ");
 		EventProducer prod = new EventProducer("DRIVER","SENDER");
-		prod.prod_message(0);
-		prod.prod_message(1);
+		if(args[0].equals("sr"))
+			prod.prod_message(1);
+		else if(args[0].equals("dr"))
+			prod.prod_message(0);
 		prod.close();
 		System.out.println("EventProducer end");
 	}
@@ -142,19 +170,21 @@ class EventProducer
 	{
 		// sender
 		Date timeStart = new Date();
-		double lat = 37.426645;
-		double lon = -122.140925;
+		double slat = 37.441883;
+		double slon = -122.143019;
+		double elat = 37.368830;
+		double elon = -122.036350;
 		int space = 10;
 		int price = 10;
-		Location l = new Location(lat,lon);
-		ArrayList<Location> al = new ArrayList<Location>();
-		al.add(l);
+		// Location l = new Location(lat,lon);
+		// ArrayList<Location> al = new ArrayList<Location>();
+		// al.add(l);
 		if(type == 0)
 		{
 			System.out.println("PRODUCE msg to DRIVER");
-			DriverSender dr = new DriverSender(0,type,al,timeStart,timeStart,timeStart,10,10);
+			DriverSender dr = new DriverSender(0,type,/* al,*/timeStart,timeStart,timeStart,10,10,slat,slon,elat,elon,1);
 			int i = 0;
-			while(i < 10)
+			while(i < 1)
 			{
 				producer.send(new ProducerRecord<String,String>(this.driver_topic_name,dr.toString()));
 				System.out.println("EventProducer prod_message DRIVER ");
@@ -165,9 +195,9 @@ class EventProducer
 		{
 			// sender
 			System.out.println("PRODUCE msg to SENDER");
-			DriverSender dr = new DriverSender(1,type,al,timeStart,timeStart,timeStart,5,5);
+			DriverSender dr = new DriverSender(1,type,/*al,*/timeStart,timeStart,timeStart,5,5,slat,slon,elat,elon,1);
 			int i = 0;
-			while(i < 10)
+			while(i < 1)
 			{
 				producer.send(new ProducerRecord<String,String>(this.user_topic_name,dr.toString()));
 				System.out.println("EventProducer prod_message SENDER ");
@@ -178,12 +208,5 @@ class EventProducer
 
 	public static void main(String [] args)
 	{
-/*
-		EventProducer producer = new EventProducer("DRIVER","USER");
-		producer.prod_message(0);
-		producer.prod_message(1);
-		producer.close();
-		System.out.println("EventProducer pkg import succeed ");
-*/
 	}
 }
