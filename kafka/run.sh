@@ -1,1 +1,1 @@
-java -cp "/usr/local/kafka/libs/*:json.jar:." DriverSender
+java -cp target/cargoart-1.0-SNAPSHOT-jar-with-dependencies.jar DriverSender "dr"

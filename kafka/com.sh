@@ -1,1 +1,1 @@
-javac -cp "/usr/local/kafka/libs/*:json.jar:." DriverSender.java
+mvn clean compile assembly:single
