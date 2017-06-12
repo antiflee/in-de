@@ -1,8 +1,5 @@
 #!/usr/bin/python
 from __future__ import print_function
-'''
-import redis, math, datetime, yaml
-'''
 import os
 import json
 from pyspark import SparkContext, SparkConf
