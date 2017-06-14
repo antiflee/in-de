@@ -1,0 +1,12 @@
+num_senders,100
+num_drivers,100
+review,1,5
+senderspace,1,10
+driverspace,1,20
+drivedistance,10,25
+radius,10000
+price,1,2
+location1,36.677737,-121.655501
+location2,37.774929,-122.419416
+location3,38.581572,-121.494400
+location4,36.746842,-119.772587

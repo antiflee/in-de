@@ -1,13 +1,22 @@
 import java.io.Serializable;
 import java.util.Date;
 import java.util.ArrayList;
+import java.util.Random;
+import java.util.Collections;
 import org.json.simple.JSONObject;
+
+import java.lang.*;
+import java.io.*;
 
 
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import java.util.Properties;
+
+import java.time.LocalDateTime;
+import java.time.LocalDate;
+import java.time.LocalTime;
 
 class Location
 {
@@ -36,9 +45,9 @@ public class DriverSender implements Serializable{
 	// private Party partyType;
 	private String type;
 	// private ArrayList<Location> route;
-	private Date startTime;
-	private Date endTime;
-	private Date eventTime;
+	private LocalDateTime startTime;
+	private LocalDateTime endTime;
+	private LocalDateTime eventTime;
 
 	private int space;
 	private int price;
@@ -51,9 +60,9 @@ public class DriverSender implements Serializable{
 
 	DriverSender(int id, int type,
 			// ArrayList<Location> route, 
-			Date startTime,
-			Date endTime,
-			Date eventTime,
+			LocalDateTime startTime,
+			LocalDateTime endTime,
+			LocalDateTime eventTime,
 			int space,
 			int price,
 			Double slat,
@@ -81,14 +90,19 @@ public class DriverSender implements Serializable{
 		this.elon = elon;
 		this.review = review;
 	}
+
+	public String getType()
+	{
+		return type;
+	}
 	
 	// price
 
-	public Date getEventTime() {
+	public LocalDateTime getEventTime() {
 		return eventTime;
 	}
 
-	public void setEventTime(Date eventTime) {
+	public void setEventTime(LocalDateTime eventTime) {
 		this.eventTime = eventTime;
 	}
 
@@ -98,24 +112,20 @@ public class DriverSender implements Serializable{
 
   		JSONObject obj=new JSONObject();
   		obj.put("id",new Integer(id));
-  		// obj.put("stime",new String(startTime.toString()));
-		// obj.put("etime", new String(endTime.toString()));
+  		obj.put("stime",new String(startTime.toString()));
+		obj.put("etime", new String(endTime.toString()));
   		obj.put("space",new Integer(space));
 		if(type == "DRIVER")
   			obj.put("price",new Integer(price));
 		if(type == "DRIVER")
 			obj.put("review",new Integer(review));
-		// obj.put("sloc", new String(" lat: " + slat + "," + "lon: " + slan + "")
 		obj.put("slat", new Double(slat));
 		obj.put("slon", new Double(slon));
-		// obj.put("eloc", new String(" lat: " + elat + "," + "lon: " + elan + "")
 		obj.put("dlat", new Double(elat));
 		obj.put("dlon", new Double(elon));
-		return obj.toString();
 
-/*
-		return  "{id:" + "" + id + "," +  "stime: " +  startTime + "," + "etime:" + endTime + "," + "space:" + space + "," + "price:" + price + "}";
-*/
+		// System.out.println(obj.toString());
+		return obj.toString();
 	}
 
 	public static void main(String [] args)
@@ -126,6 +136,8 @@ public class DriverSender implements Serializable{
 			prod.prod_message(1);
 		else if(args[0].equals("dr"))
 			prod.prod_message(0);
+		else if(args[0].equals("blk"))
+			prod.prod_bulk_messages();
 		prod.close();
 		System.out.println("EventProducer end");
 	}
@@ -135,14 +147,150 @@ public class DriverSender implements Serializable{
 class EventProducer
 {
 	private String driver_topic_name;
-	private String user_topic_name;
+	private String sender_topic_name;
 	private Producer<String, String> producer;
+	private BufferedReader br;
+	private	FileInputStream fstream = null;
 
-	EventProducer(String driver_topic_name, String user_topic_name)
+	private int num_senders;
+	private int num_drivers;
+
+	private int reviewlow;
+	private int reviewhigh;
+
+	private int senderspacelow;
+	private int senderspacehigh;
+
+	private int driverspacelow;
+	private int driverspacehigh;
+
+	private int drivedistancelow;
+	private int drivedistancehigh;
+
+	private int radius;
+
+	private int pricelow;
+	private int pricehigh;
+
+	private Location [] locs = new Location[4];
+
+	EventProducer(String driver_topic_name, String sender_topic_name)
 	{
 		this.producer = new KafkaProducer<String, String>(createKafkaConfig());
 		this.driver_topic_name = driver_topic_name;
-		this.user_topic_name = user_topic_name;
+		this.sender_topic_name = sender_topic_name;
+
+		try {
+			fstream = new FileInputStream("/home/ubuntu/cargoart/src/main/java/config.csv");
+		}
+                catch(Exception e)
+                {
+                        System.err.println(e.getMessage());
+                }
+
+
+		try {
+			br = new BufferedReader(new InputStreamReader(fstream));
+		}
+		catch(Exception e)
+		{
+			System.err.println(e.getMessage());
+		}
+
+		readConfig();
+
+	}
+
+	private void readConfig()
+	{
+		String strLine = null;
+		String [] elements;
+		Double lat;
+		Double lon;
+
+		System.out.println("reading configuration");
+
+		while(true)
+		{
+			try {
+				strLine = br.readLine();
+			}
+			catch(Exception e)
+			{
+				System.err.println(e.getMessage());
+			}
+
+			if(strLine == null)
+				break;
+			elements = strLine.split(",");
+
+			if(elements[0].equals("num_senders"))
+			{
+				num_senders = Integer.parseInt(elements[1]);
+				System.out.println("num_senders" + num_senders);
+			}
+			if(elements[0].equals("num_drivers"))
+			{
+				num_drivers =  Integer.parseInt(elements[1]);
+				System.out.println("num_drivers" + num_drivers);
+			}
+			if(elements[0].equals("review"))
+			{
+				reviewlow = Integer.parseInt(elements[1]);
+				reviewhigh = Integer.parseInt(elements[2]);
+				System.out.println("reviewlow" + reviewlow + "reviewhigh" + reviewhigh);
+			}
+			if(elements[0].equals("senderspace"))
+			{
+				senderspacelow = Integer.parseInt(elements[1]);
+				senderspacehigh = Integer.parseInt(elements[2]);
+				System.out.println("senderspacelow" + senderspacelow + "senderspacehigh" + senderspacehigh);
+			}
+			if(elements[0].equals("driverspace"))
+			{
+				driverspacelow = Integer.parseInt(elements[1]);
+				driverspacehigh = Integer.parseInt(elements[2]);
+				System.out.println("driverspacelow" + driverspacelow + "driverspacehigh" + driverspacehigh);
+			}
+			if(elements[0].equals("drivedistance"))
+			{
+				drivedistancelow = Integer.parseInt(elements[1]);
+				drivedistancehigh = Integer.parseInt(elements[2]);
+				System.out.println("driverdistancelow" + drivedistancelow + "driverdistancehigh" + drivedistancehigh);
+			}
+			if(elements[0].equals("radius"))
+			{
+				radius = Integer.parseInt(elements[1]);
+				System.out.println("radius" + radius);
+			}
+			if(elements[0].equals("price"))
+			{
+				pricelow = Integer.parseInt(elements[1]);
+				pricehigh = Integer.parseInt(elements[2]);
+				System.out.println("pricelow" + pricelow + "pricehigh" + pricehigh);
+			}
+			if(elements[0].equals("location1"))
+			{
+				locs[0] = new Location(Double.parseDouble(elements[1]),Double.parseDouble(elements[2]));
+				// System.out.println("lat1 " + lat + " lon1 " + lon);
+			}	
+			if(elements[0].equals("location2"))
+			{
+				locs[1] = new Location(Double.parseDouble(elements[1]),Double.parseDouble(elements[2]));
+				// System.out.println("lat2 " + lat + " lon2 " + lon);
+			}	
+	    		if(elements[0].equals("location3"))
+			{
+				locs[2] = new Location(Double.parseDouble(elements[1]),Double.parseDouble(elements[2]));
+				// System.out.println("lat3 " + lat + "lon3 " + lon);
+			}
+	    		if(elements[0].equals("location4"))
+			{
+				locs[3] = new Location(Double.parseDouble(elements[1]),Double.parseDouble(elements[2]));
+				// System.out.println("lat4 " + lat + " lon4 " + lon);
+			}
+	   
+	    	}
 	}
 
 	private static Properties createKafkaConfig() {
@@ -166,6 +314,104 @@ class EventProducer
 		producer.close();
 	}
 
+        public static double[] generateLocation(double x0, double y0, int radius) {
+                Random random = new Random();
+
+                // Convert radius from meters to degrees
+                double radiusInDegrees = radius / 111000f;
+
+                double u = random.nextDouble();
+                double v = random.nextDouble();
+                double w = radiusInDegrees * Math.sqrt(u);
+                double t = 2 * Math.PI * v;
+                double x = w * Math.cos(t);
+                double y = w * Math.sin(t);
+
+                // Adjust the x-coordinate for the shrinking of the east-west distances
+                double new_x = x / Math.cos(Math.toRadians(y0));
+
+                double newLong = new_x + x0;
+                double newLat = y + y0;
+                // System.out.println("Longitude: " + foundLongitude + " Latitude: " +
+                return new double[] { newLat, newLong };
+        }
+
+	private static LocalDateTime[]  getTimeRange()
+	{
+                Random random = new Random();
+		
+                LocalDateTime timeStart = LocalDateTime.of(LocalDate.now(),
+                                LocalTime.of(random.nextInt(4), random.nextInt(60),
+                                random.nextInt(60), random.nextInt(999999999 + 1)));
+                System.out.println("starttime" + timeStart);
+
+                LocalDateTime timeEnd =  LocalDateTime.of(LocalDate.now(),
+                        LocalTime.of(16+random.nextInt(4), random.nextInt(60),
+                                random.nextInt(60), random.nextInt(999999999 + 1)));
+                 System.out.println("endtime" + timeEnd );
+
+                return new LocalDateTime[] { timeStart, timeEnd };
+		
+         }
+
+
+	public void prod_bulk_messages()
+	{
+		ArrayList<DriverSender> drList = new ArrayList<DriverSender>();
+		int srcIdx;
+		int dstIdx;
+		Date timeStart = new Date();
+
+		for(int i = 0 ; i < num_senders ; i++)	
+		{
+			srcIdx = new Random().nextInt(4);	
+
+			while((dstIdx = new Random().nextInt(4)) == srcIdx)
+			{
+				continue;
+			} 
+			LocalDateTime [] timeRange = getTimeRange();
+
+			double [] srcLoc = generateLocation(locs[srcIdx].longitude,locs[srcIdx].latitude,radius);
+			double [] dstLoc = generateLocation(locs[dstIdx].longitude,locs[dstIdx].latitude,radius);
+			DriverSender dr = new DriverSender(i,1,timeRange[0],timeRange[1],LocalDateTime.now(),
+								senderspacehigh,
+								0,srcLoc[0],srcLoc[1],dstLoc[0],dstLoc[1],0);
+			drList.add(dr);
+
+		}
+	
+		for(int i = 0 ; i < num_drivers ; i++)	
+		{
+			srcIdx = new Random().nextInt(4);	
+			while((dstIdx = new Random().nextInt(4)) == srcIdx)
+			{
+				continue;
+			} 
+			double [] srcLoc = generateLocation(locs[srcIdx].longitude,locs[srcIdx].latitude,radius);
+			double [] dstLoc = generateLocation(locs[dstIdx].longitude,locs[dstIdx].latitude,radius);
+			LocalDateTime [] timeRange = getTimeRange();
+
+			DriverSender dr = new DriverSender(i,0,/* al,*/timeRange[0],timeRange[1],LocalDateTime.now(),
+								driverspacehigh,
+								new Random().nextInt(pricehigh-pricelow)+pricelow,srcLoc[0],srcLoc[1],dstLoc[0],dstLoc[1],new Random().nextInt(reviewhigh-reviewlow)+reviewlow);
+			drList.add(dr);
+
+		}
+		Collections.shuffle(drList);
+		Collections.shuffle(drList);
+		Collections.shuffle(drList);
+		for( DriverSender dr : drList)
+		{
+			if(dr.getType().equals("DRIVER"))
+				producer.send(new ProducerRecord<String,String>(this.driver_topic_name,dr.toString()));
+			else
+				producer.send(new ProducerRecord<String,String>(this.sender_topic_name,dr.toString()));
+		}
+		System.out.println("prod_bulk_messages done");
+		
+	}
+
 	public void prod_message(int type)
 	{
 		// sender
@@ -182,7 +428,9 @@ class EventProducer
 		if(type == 0)
 		{
 			System.out.println("PRODUCE msg to DRIVER");
-			DriverSender dr = new DriverSender(0,type,/* al,*/timeStart,timeStart,timeStart,10,10,slat,slon,elat,elon,1);
+			LocalDateTime [] timeRange = getTimeRange();
+
+			DriverSender dr = new DriverSender(0,type,timeRange[0],timeRange[1],LocalDateTime.now(),10,10,slat,slon,elat,elon,1);
 			int i = 0;
 			while(i < 1)
 			{
@@ -195,11 +443,12 @@ class EventProducer
 		{
 			// sender
 			System.out.println("PRODUCE msg to SENDER");
-			DriverSender dr = new DriverSender(1,type,/*al,*/timeStart,timeStart,timeStart,5,5,slat,slon,elat,elon,1);
+			LocalDateTime [] timeRange = getTimeRange();
+			DriverSender dr = new DriverSender(1,type,/*al,*/timeRange[0],timeRange[1],LocalDateTime.now(),5,5,slat,slon,elat,elon,1);
 			int i = 0;
 			while(i < 1)
 			{
-				producer.send(new ProducerRecord<String,String>(this.user_topic_name,dr.toString()));
+				producer.send(new ProducerRecord<String,String>(this.sender_topic_name,dr.toString()));
 				System.out.println("EventProducer prod_message SENDER ");
 				i++;
 			}
