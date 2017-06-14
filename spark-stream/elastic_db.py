@@ -21,11 +21,11 @@ def create_indices():
 	    'alldriver': {
 	      'properties': {
 		'id': {'type': 'integer'},
-		'space': {'type': 'integer'},
-		'price': {'type': 'integer'},
-		'review': {'type': 'integer'},
-		'sloc': {'type': 'geo_point'},
-		'dloc': {'type': 'geo_point'},
+		'space': {'type': 'integer', "include_in_all": "false"},
+		'price': {'type': 'integer', "include_in_all": "false"},
+		'review': {'type': 'integer', "include_in_all": "false"},
+		'sloc': {'type': 'geo_point',  "include_in_all": "false"},
+		'dloc': {'type': 'geo_point', "include_in_all": "false"},
 	      }
 	    }
 	  }
@@ -41,9 +41,9 @@ def create_indices():
 	    'allsender': {
 	      'properties': {
 		'id': {'type': 'integer'},
-		'space': {'type': 'integer'},
-		'sloc': {'type': 'geo_point'},
-		'dloc': {'type': 'geo_point'},
+		'space': {'type': 'integer',"include_in_all":"false"},
+		'sloc': {'type': 'geo_point',"include_in_all":"false"},
+		'dloc': {'type': 'geo_point',"include_in_all":"false"},
 	      }
 	    }
 	  }
@@ -57,8 +57,8 @@ def create_indices():
 def delete_indices():
 	print("deleting driver and sender indices")
 	es = Elasticsearch(cluster, http_auth=('elastic','changeme'))
-	es.indices.delete(index='driver')
-	es.indices.delete(index='sender')
+	es.indices.delete(index='driver',ignore=[404,400])
+	es.indices.delete(index='sender',ignore=[404,400])
 	print("deleted driver and sender indices")
 
 
