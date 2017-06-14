@@ -20,7 +20,17 @@ def extractEvent(x):
         'price' : x['price'],
     }
 
+def storeDrivers(rdd):
+	cluster = ['ip-10-0-0-5', 'ip-10-0-0-6', 'ip-10-0-0-8', 'ip-10-0-0-10']
+	es = Elasticsearch(cluster, http_auth=('elastic','changeme'))
+	for x in rdd:
+		es.create(index='driver',doc_type='alldriver',id=x[1],body=x[2])
 
+def storeSenders(rdd):
+	cluster = ['ip-10-0-0-5', 'ip-10-0-0-6', 'ip-10-0-0-8', 'ip-10-0-0-10']
+	es = Elasticsearch(cluster, http_auth=('elastic','changeme'))
+	for x in rdd:
+		es.create(index='sender',doc_type='allsender',id=x[1],body=x[2])
 
 def findsenders(x):
 
@@ -34,6 +44,8 @@ def findsenders(x):
 
 	dlon = x['dlon']
 	dlat = x['dlat']
+
+	count = 0
 	  
 	cluster = ['ip-10-0-0-5', 'ip-10-0-0-6', 'ip-10-0-0-8', 'ip-10-0-0-10']
 	'''
@@ -48,7 +60,7 @@ def findsenders(x):
 			"must" : { "range" : { "space" : {"lte": space }}},
 			"filter" : {
 				"geo_distance" : {
-					"distance" : "10km",
+					"distance" : "20km",
 					"distance_type": "plane",
 					"dloc" : {
 						"lat" : dlat,
@@ -97,15 +109,23 @@ def findsenders(x):
 
 
 	res = es.search(index="sender",doc_type="allsender",body=sender_query)
+
 	if(res["hits"]["hits"]):
+		'''
 		print("found senders")
+		'''
+		count = 1
+	'''
 	else:
 		print("did not find senders")
+	'''
 
 
+	'''
 	for row in res["hits"]["hits"]:
 		sender =  row["_source"]
 		print(sender)
+	'''
 
 
 	driver_entry = {
@@ -118,9 +138,16 @@ def findsenders(x):
 		'dloc': {'lat':  x['dlat'], 'lon': x['dlon']},
 	}
 
+	'''
 	res = es.create(index="driver",doc_type="alldriver",id=x['id'],body=driver_entry)
 
+	'''
+	'''
 	return x
+	return(count, x['id'],'{{doc:{}}}'.format(json.dumps(driver_entry)))
+	print(json.dumps(driver_entry))
+	'''
+	return(1, x['id'],json.dumps(driver_entry))
 
 '''
  search in sender database
@@ -148,15 +175,16 @@ def finddriver(x):
  	for now store in the database
 	'''
 
+	'''
 	cluster = ['ip-10-0-0-5', 'ip-10-0-0-6', 'ip-10-0-0-8', 'ip-10-0-0-10']
-	'''
-	es = Elasticsearch(cluster, http_auth=('elastic','changeme'))
-	'''
+
+
 	es = Elasticsearch(cluster, http_auth=('elastic','changeme'),verify_certs=False)
 	es.create(index='sender',doc_type='allsender',id=x['id'],body=sender_entry)
-
-	print("created sender entry in elastic search")
 	'''
+
+	'''
+	print("created sender entry in elastic search")
 		driver_query = {
 			"from": 0, "size": 5,
 			"query": {
@@ -210,8 +238,12 @@ def finddriver(x):
 			  },
 		   ],
 		}
-	'''
 	return x
+	return(1, x['id'],'{{doc:{}}}'.format(json.dumps(sender_entry)))
+	print(json.dumps(sender_entry))
+	'''
+
+	return(1, x['id'],json.dumps(sender_entry))
 
 def storeOffsetRanges(rdd):
     global offsetRanges
@@ -229,35 +261,26 @@ def main():
 	print("sucks")
 
 	sc = SparkContext(appName="cargo")
-	ssc = StreamingContext(sc, 5)
+	ssc = StreamingContext(sc, 8)
 	sc.setLogLevel("WARN")    
 
 	cluster = ['ip-10-0-0-5', 'ip-10-0-0-6', 'ip-10-0-0-8', 'ip-10-0-0-10']
 	print("sucks 1")
     	brokers = ','.join(['{}:9092'.format(i) for i in cluster])
 
-	'''
-	es = Elasticsearch(cluster, http_auth=('elastic','changeme'))
-	'''
 	es = Elasticsearch(cluster, http_auth=('elastic','changeme'),verify_certs=False)
 
-	print("sucks 2")
 
     	driver = KafkaUtils.createDirectStream(ssc, ['DRIVER'], {'metadata.broker.list':brokers})
 
     	sender = KafkaUtils.createDirectStream(ssc, ['SENDER'], {'metadata.broker.list':brokers})
 
 
-	D = driver.map(lambda x: json.loads(x[1])).map(findsenders)
-	S = sender.map(lambda x: json.loads(x[1])).map(finddriver)
+	D = driver.map(lambda x: json.loads(x[1])).map(findsenders)\
+		.filter(lambda x: x[0]==1).foreachRDD(lambda rdd: rdd.foreachPartition(storeDrivers))
+	S = sender.map(lambda x: json.loads(x[1])).map(finddriver)\
+		.filter(lambda x: x[0]==1).foreachRDD(lambda rdd: rdd.foreachPartition(storeSenders))
 
-	'''
-	D = sender.map(lambda x: json.loads(x[1]))
-	S = sender.map(lambda x: json.loads(x[1]))
-	'''
-
-	D.pprint()
-	S.pprint()
 	ssc.start()
 	print("DONE SPARK STREAMING")
 	ssc.awaitTermination()
