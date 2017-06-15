@@ -74,7 +74,7 @@ def findsenders(x):
 			 },
 			 "filter": {
 				 "geo_distance" : {
-					"distance" : dist,
+					"distance" : "100km",
 					"distance_type": "plane",
 					"sloc" : {
 						"lat" : slat,
@@ -205,7 +205,7 @@ def finddriver(x):
 			"must" : { "range": { "etime" : {"gte": etime  }}},
 			"filter" : {
 				"geo_distance" : {
-					"distance" : "50km",
+					"distance" : "100km",
 					"distance_type": "plane",
 					"dloc" : {
 						"lat" : dlat,
@@ -215,7 +215,7 @@ def finddriver(x):
 			 },
 			 "filter": {
 				 "geo_distance" : {
-					"distance" : dist,
+					"distance" : "100km",
 					"distance_type": "plane",
 					"sloc" : {
 						"lat" : slat,
@@ -249,6 +249,7 @@ def finddriver(x):
 			 }
 		  },
 		  { "review":  {"order":"desc"}},
+		  { "price":  {"order":"asc"}},
 		  { "space": {"order":"desc"}},
 	   ],
 	}
@@ -295,14 +296,13 @@ def printOffsetRanges(rdd):
 def main():
 	"""Runs and specifies map reduce jobs for streaming data. Data
 		is processed in 2 ways to be sent both to redis and ES"""
+	print("in spark main")
 
-	print("in main 1")
 	sc = SparkContext(appName="cargo")
 	ssc = StreamingContext(sc, 8)
 	sc.setLogLevel("WARN")    
 
 	cluster = ['ip-10-0-0-5', 'ip-10-0-0-6', 'ip-10-0-0-8', 'ip-10-0-0-10']
-	print("in main 2")
     	brokers = ','.join(['{}:9092'.format(i) for i in cluster])
 
 	es = Elasticsearch(cluster, http_auth=('elastic','changeme'))
@@ -318,10 +318,10 @@ def main():
 	S = sender.map(lambda x: json.loads(x[1])).map(finddriver)\
 		.filter(lambda x: x[0]==1).foreachRDD(lambda rdd: rdd.foreachPartition(storeSenders))
 
-	ssc.start()
+	print("sucks");
 	print("DONE SPARK STREAMING")
+	ssc.start()
 	ssc.awaitTermination()
-	print("done main")
 
 if __name__ == '__main__':
 	main()

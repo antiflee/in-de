@@ -1,9 +1,9 @@
-num_senders,100
-num_drivers,100
+num_senders,20000
+num_drivers,20000
 review,1,5
 senderspace,1,10
-driverspace,1,20
-drivedistance,10,25
+driverspace 1,20
+drivedistance,100,250
 radius,10000
 price,1,2
 location1,36.677737,-121.655501
