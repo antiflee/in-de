@@ -44,6 +44,7 @@ def create_indices():
 		'space': {'type': 'integer',"include_in_all":"false"},
 		'sloc': {'type': 'geo_point',"include_in_all":"false"},
 		'dloc': {'type': 'geo_point',"include_in_all":"false"},
+		'review': {'type': 'integer', "include_in_all": "false"},
 	      }
 	    }
 	  }
