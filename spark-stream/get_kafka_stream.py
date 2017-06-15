@@ -45,22 +45,26 @@ def findsenders(x):
 	dlon = x['dlon']
 	dlat = x['dlat']
 
+	etime = x['etime']
+
+	dist = x['dist']
+
 	count = 0
 	  
 	cluster = ['ip-10-0-0-5', 'ip-10-0-0-6', 'ip-10-0-0-8', 'ip-10-0-0-10']
-	'''
 	es = Elasticsearch(cluster, http_auth=('elastic','changeme'))
-	'''
-	es = Elasticsearch(cluster, http_auth=('elastic','changeme'),verify_certs=False)
 
 	sender_query = {
-		"from": 0, "size": 5,
+		"from": 0, "size": 1,
 		"query": {
 		"bool" : {
+			"must" : { "range": { "review" : {"lte": review }}},
+			"must_not" : { "term" : { "match" : "true"}},
 			"must" : { "range" : { "space" : {"lte": space }}},
+			"must" : { "range": { "etime" : {"lte": etime  }}},
 			"filter" : {
 				"geo_distance" : {
-					"distance" : "20km",
+					"distance" : "100km",
 					"distance_type": "plane",
 					"dloc" : {
 						"lat" : dlat,
@@ -70,7 +74,7 @@ def findsenders(x):
 			 },
 			 "filter": {
 				 "geo_distance" : {
-					"distance" : "10km",
+					"distance" : dist,
 					"distance_type": "plane",
 					"sloc" : {
 						"lat" : slat,
@@ -81,7 +85,6 @@ def findsenders(x):
 		   }
 		},
 		"sort": [
-		  { "space": {"order":"desc"}},
 		  {"_geo_distance":
 			 {
 				"sloc": {
@@ -104,21 +107,24 @@ def findsenders(x):
 				"distance_type": "plane"
 			 }
 		  },
+		  { "review":  {"order":"desc"}},
+		  { "space": {"order":"desc"}},
 	   ],
 	}
 
 
+
 	res = es.search(index="sender",doc_type="allsender",body=sender_query)
 
-	if(res["hits"]["hits"]):
-		'''
+	match_found = "false"
+	if(res["hits"]["total"] == 1 ):
 		print("found senders")
-		'''
 		count = 1
-	'''
-	else:
-		print("did not find senders")
-	'''
+		match_found = "true"
+		senderid = res['hits']['hits'][0]["_source"]["id"];
+		doc = {"doc": {"match": "true"}}
+		res=es.update(index='sender',doc_type='allsender',id=senderid,body=json.dumps(doc),ignore=[409])
+		print("updated sender")
 
 
 	'''
@@ -133,20 +139,18 @@ def findsenders(x):
 		'space': x['space'],
 		'price': x['price'],
 		'review':  x['review'],
-
 		'sloc': {'lat':  x['slat'], 'lon': x['slon']},
 		'dloc': {'lat':  x['dlat'], 'lon': x['dlon']},
+		'stime': x['stime'],
+		'etime': x['etime'],
+		'dist': x['dist'],
+		'match': match_found
 	}
 
 	'''
-	res = es.create(index="driver",doc_type="alldriver",id=x['id'],body=driver_entry)
-
-	'''
-	'''
-	return x
-	return(count, x['id'],'{{doc:{}}}'.format(json.dumps(driver_entry)))
 	print(json.dumps(driver_entry))
 	'''
+
 	return(1, x['id'],json.dumps(driver_entry))
 
 '''
@@ -163,86 +167,119 @@ def findsenders(x):
 
 def finddriver(x):
 
-	sender_entry = {
-		'id': x['id'],
-		'space': x['space'],
+	srid = x['id']
+	space  = x['space']
+	review = x['review']
 
-		'sloc': {'lat':  x['slat'], 'lon': x['slon']},
-		'dloc': {'lat':  x['dlat'], 'lon': x['dlon']}
-	}
+	slon = x['slon']
+	slat = x['slat']
+
+	dlon = x['dlon']
+	dlat = x['dlat']
+
+	etime = x['etime']
+
+	dist = x['dist']
+
+	count = 0
+	
 
 	'''
  	for now store in the database
 	'''
 
-	'''
 	cluster = ['ip-10-0-0-5', 'ip-10-0-0-6', 'ip-10-0-0-8', 'ip-10-0-0-10']
 
 
-	es = Elasticsearch(cluster, http_auth=('elastic','changeme'),verify_certs=False)
-	es.create(index='sender',doc_type='allsender',id=x['id'],body=sender_entry)
-	'''
+	es = Elasticsearch(cluster, http_auth=('elastic','changeme'))
 
-	'''
 	print("created sender entry in elastic search")
-		driver_query = {
-			"from": 0, "size": 5,
-			"query": {
-			"bool" : {
-				"must" : { "range" : { "space" : {"gte": space }}},
-				"filter" : {
-					"geo_distance" : {
-						"distance" : "10km",
-						"distance_type": "plane"
-						"dloc" : {
-							"lat" : dlat,
-							"lon" : dlon 
-						}
-					 }
+
+	driver_query = {
+		"from": 0, "size": 1,
+		"query": {
+		"bool" : {
+			"must" : { "range": { "review" : {"gte": review }}},
+			"must_not" : { "term" : { "match" : "true"}},
+			"must" : { "range" : { "space" : {"gte": space }}},
+			"must" : { "range": { "etime" : {"gte": etime  }}},
+			"filter" : {
+				"geo_distance" : {
+					"distance" : "50km",
+					"distance_type": "plane",
+					"dloc" : {
+						"lat" : dlat,
+						"lon" : dlon
+					}
 				 }
-				 "filter": { 
-					 "geo_distance" : {
-						"distance" : "10km",
-						"distance_type": "plane"
-						"dloc" : {
-							"lat" : dlat,
-							"lon" : dlon 
-						}		
-					 }
-				  }
-			   }
-			},
-			"sort": [
-			  { "space": {"order":"desc"}},
-			  {"_geo_distance":
-				 { 
-					"sloc":  {
-							"lat" : slat,
-							"lon" : slon 
-					},		
-					"order": "asc",
-					"unit": "km", 
-					"distance_type": "plane" 
+			 },
+			 "filter": {
+				 "geo_distance" : {
+					"distance" : dist,
+					"distance_type": "plane",
+					"sloc" : {
+						"lat" : slat,
+						"lon" : slon
+					}
 				 }
-			  },
-			  { "_geo_distance": 
-				{ 	
-					"dloc": : {
-							"lat" : dlat,
-							"lon" : dlon 
-					},		
-					"order": "asc",
-					"unit": "km", 
-					"distance_type": "plane" 
-				 }
-			  },
-		   ],
-		}
-	return x
-	return(1, x['id'],'{{doc:{}}}'.format(json.dumps(sender_entry)))
+			  }
+		   }
+		},
+		"sort": [
+		  {"_geo_distance":
+			 {
+				"sloc": {
+						"lat" : slat,
+						"lon" : slon
+				},
+				"order": "asc",
+				"unit": "km",
+				"distance_type": "plane"
+			 }
+		  },
+		  { "_geo_distance":
+			{
+				"dloc": {
+						"lat" : dlat,
+						"lon" : dlon
+				},
+				"order": "asc",
+				"unit": "km",
+				"distance_type": "plane"
+			 }
+		  },
+		  { "review":  {"order":"desc"}},
+		  { "space": {"order":"desc"}},
+	   ],
+	}
+
+
+	res = es.search(index="driver",doc_type="alldriver",body=driver_query)
+
+	match_found = "false"
+	if(res["hits"]["total"]):
+		print("found driver")
+		count = 1
+		match_found = "true"
+		driverid = res['hits']['hits'][0]["_source"]["id"];
+		doc = {"doc": {"match": "true"}}
+		res=es.update(index='driver',doc_type='alldriver',id=driverid,body=json.dumps(doc),ignore=[409])
+		print("updated driver")
+
+	sender_entry = {
+		'id': x['id'],
+		'space': x['space'],
+
+		'sloc': {'lat':  x['slat'], 'lon': x['slon']},
+		'dloc': {'lat':  x['dlat'], 'lon': x['dlon']},
+		'stime': x['stime'],
+		'etime': x['etime'],
+		'review': x['review'],
+		'match': match_found
+	}
+	'''
 	print(json.dumps(sender_entry))
 	'''
-
 	return(1, x['id'],json.dumps(sender_entry))
 
 def storeOffsetRanges(rdd):
@@ -268,7 +305,7 @@ def main():
 	print("sucks 1")
     	brokers = ','.join(['{}:9092'.format(i) for i in cluster])
 
-	es = Elasticsearch(cluster, http_auth=('elastic','changeme'),verify_certs=False)
+	es = Elasticsearch(cluster, http_auth=('elastic','changeme'))
 
 
     	driver = KafkaUtils.createDirectStream(ssc, ['DRIVER'], {'metadata.broker.list':brokers})

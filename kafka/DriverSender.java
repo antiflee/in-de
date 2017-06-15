@@ -56,6 +56,7 @@ public class DriverSender implements Serializable{
 	private Double elat;
 	private Double elon;
 	private int review;
+	private int distance;
 
 
 	DriverSender(int id, int type,
@@ -69,7 +70,8 @@ public class DriverSender implements Serializable{
 			Double slon,
 			Double elat,
 			Double elon,
-			int review)
+			int review,
+			int distance)
 	{
 		this.id = id;
 		if(type == 0)
@@ -89,6 +91,7 @@ public class DriverSender implements Serializable{
 		this.elat = elat;
 		this.elon = elon;
 		this.review = review;
+		this.distance = distance;
 	}
 
 	public String getType()
@@ -109,22 +112,24 @@ public class DriverSender implements Serializable{
 	
 	@Override
 	public String toString() {
+		String sTime = new String(startTime.toString()+"Z");
+		String eTime = new String(startTime.toString()+"Z");
 
   		JSONObject obj=new JSONObject();
   		obj.put("id",new Integer(id));
-  		obj.put("stime",new String(startTime.toString()));
-		obj.put("etime", new String(endTime.toString()));
+  		obj.put("stime",sTime);
+		obj.put("etime", eTime);
   		obj.put("space",new Integer(space));
 		if(type == "DRIVER")
   			obj.put("price",new Integer(price));
-		if(type == "DRIVER")
-			obj.put("review",new Integer(review));
+		obj.put("review",new Integer(review));
 		obj.put("slat", new Double(slat));
 		obj.put("slon", new Double(slon));
 		obj.put("dlat", new Double(elat));
 		obj.put("dlon", new Double(elon));
+		obj.put("dist", new Integer(distance));
 
-		// System.out.println(obj.toString());
+		System.out.println(obj.toString());
 		return obj.toString();
 	}
 
@@ -171,6 +176,7 @@ class EventProducer
 
 	private int pricelow;
 	private int pricehigh;
+
 
 	private Location [] locs = new Location[4];
 
@@ -376,7 +382,7 @@ class EventProducer
 			double [] dstLoc = generateLocation(locs[dstIdx].longitude,locs[dstIdx].latitude,radius);
 			DriverSender dr = new DriverSender(i,1,timeRange[0],timeRange[1],LocalDateTime.now(),
 								senderspacehigh,
-								0,srcLoc[0],srcLoc[1],dstLoc[0],dstLoc[1],0);
+								0,srcLoc[0],srcLoc[1],dstLoc[0],dstLoc[1],0,0);
 			drList.add(dr);
 
 		}
@@ -394,13 +400,11 @@ class EventProducer
 
 			DriverSender dr = new DriverSender(i,0,/* al,*/timeRange[0],timeRange[1],LocalDateTime.now(),
 								driverspacehigh,
-								new Random().nextInt(pricehigh-pricelow)+pricelow,srcLoc[0],srcLoc[1],dstLoc[0],dstLoc[1],new Random().nextInt(reviewhigh-reviewlow)+reviewlow);
+								new Random().nextInt(pricehigh-pricelow)+pricelow,srcLoc[0],srcLoc[1],dstLoc[0],dstLoc[1],new Random().nextInt(reviewhigh-reviewlow)+reviewlow,new Random().nextInt(drivedistancehigh-drivedistancelow)+drivedistancelow);
 			drList.add(dr);
 
 		}
-		Collections.shuffle(drList);
-		Collections.shuffle(drList);
-		Collections.shuffle(drList);
+		// Collections.shuffle(drList);
 		for( DriverSender dr : drList)
 		{
 			if(dr.getType().equals("DRIVER"))
@@ -430,7 +434,7 @@ class EventProducer
 			System.out.println("PRODUCE msg to DRIVER");
 			LocalDateTime [] timeRange = getTimeRange();
 
-			DriverSender dr = new DriverSender(0,type,timeRange[0],timeRange[1],LocalDateTime.now(),10,10,slat,slon,elat,elon,1);
+			DriverSender dr = new DriverSender(0,type,timeRange[0],timeRange[1],LocalDateTime.now(),10,10,slat,slon,elat,elon,5,50);
 			int i = 0;
 			while(i < 1)
 			{
@@ -444,7 +448,7 @@ class EventProducer
 			// sender
 			System.out.println("PRODUCE msg to SENDER");
 			LocalDateTime [] timeRange = getTimeRange();
-			DriverSender dr = new DriverSender(1,type,/*al,*/timeRange[0],timeRange[1],LocalDateTime.now(),5,5,slat,slon,elat,elon,1);
+			DriverSender dr = new DriverSender(1,type,/*al,*/timeRange[0],timeRange[1],LocalDateTime.now(),5,5,slat,slon,elat,elon,5,5);
 			int i = 0;
 			while(i < 1)
 			{
