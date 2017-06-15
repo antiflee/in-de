@@ -295,14 +295,14 @@ def printOffsetRanges(rdd):
 def main():
 	"""Runs and specifies map reduce jobs for streaming data. Data
 		is processed in 2 ways to be sent both to redis and ES"""
-	print("sucks")
 
+	print("in main 1")
 	sc = SparkContext(appName="cargo")
 	ssc = StreamingContext(sc, 8)
 	sc.setLogLevel("WARN")    
 
 	cluster = ['ip-10-0-0-5', 'ip-10-0-0-6', 'ip-10-0-0-8', 'ip-10-0-0-10']
-	print("sucks 1")
+	print("in main 2")
     	brokers = ','.join(['{}:9092'.format(i) for i in cluster])
 
 	es = Elasticsearch(cluster, http_auth=('elastic','changeme'))
@@ -321,7 +321,7 @@ def main():
 	ssc.start()
 	print("DONE SPARK STREAMING")
 	ssc.awaitTermination()
-	print("sucks 4")
+	print("done main")
 
 if __name__ == '__main__':
 	main()
