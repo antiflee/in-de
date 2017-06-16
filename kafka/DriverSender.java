@@ -302,8 +302,11 @@ class EventProducer
 	private static Properties createKafkaConfig() {
 		Properties props = new Properties();
 		// need to find what this localhost should be
-		props.put("bootstrap.servers", "localhost:9092");
-		props.put("broker.list", "localhost:9092");
+		String brokers = "ip-10-0-0-4:9092,ip-10-0-0-7:9092,ip-10-0-0-14:9092,ip-10-0-0-8:9092";
+		// props.put("bootstrap.servers", "localhost:9092");
+		props.put("bootstrap.servers", brokers);
+		// props.put("broker.list", "localhost:9092");
+		props.put("broker.list", brokers);
 		props.put("group.id", "None");
 		props.put("acks", "all");
 		props.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");

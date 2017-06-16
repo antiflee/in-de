@@ -1,5 +1,5 @@
-num_senders,20000
-num_drivers,20000
+num_senders,10000
+num_drivers,10000
 review,1,5
 senderspace,1,10
 driverspace 1,20
