@@ -1,7 +1,7 @@
 from elasticsearch import Elasticsearch
 import sys
 
-cluster = ['ip-10-0-0-5', 'ip-10-0-0-6', 'ip-10-0-0-8', 'ip-10-0-0-10']
+cluster = ['ip-10-0-0-4', 'ip-10-0-0-7', 'ip-10-0-0-14', 'ip-10-0-0-8']
 
 '''
  include_in_all means there is _all index search do you want the field to be included in that
@@ -24,8 +24,12 @@ def create_indices():
 		'space': {'type': 'integer', "include_in_all": "false"},
 		'price': {'type': 'integer', "include_in_all": "false"},
 		'review': {'type': 'integer', "include_in_all": "false"},
-		'sloc': {'type': 'geo_point',  "include_in_all": "false"},
-		'dloc': {'type': 'geo_point', "include_in_all": "false"},
+		'sloc': {'type': 'geo_point'},
+		'dloc': {'type': 'geo_point'},
+		'stime': {'type': 'date'},
+		'etime': {'type': 'date'},
+		'dist': {'type': 'integer',"include_in_all":"false"},
+		'match': {'type': 'string',"include_in_all":"false"},
 	      }
 	    }
 	  }
@@ -42,9 +46,12 @@ def create_indices():
 	      'properties': {
 		'id': {'type': 'integer'},
 		'space': {'type': 'integer',"include_in_all":"false"},
-		'sloc': {'type': 'geo_point',"include_in_all":"false"},
-		'dloc': {'type': 'geo_point',"include_in_all":"false"},
+		'sloc': {'type': 'geo_point'},
+		'dloc': {'type': 'geo_point'},
+		'stime': {'type': 'date'},
+		'etime': {'type': 'date'},
 		'review': {'type': 'integer', "include_in_all": "false"},
+		'match': {'type': 'string',"include_in_all":"false"},
 	      }
 	    }
 	  }
@@ -62,6 +69,30 @@ def delete_indices():
 	es.indices.delete(index='sender',ignore=[404,400])
 	print("deleted driver and sender indices")
 
+def get_total_match():
+	print("total matches")
+	es = Elasticsearch(cluster, http_auth=('elastic','changeme'))
+	q = {
+  		'size':0,
+  		'query': { 'term': {'match': 'true'} },
+   		"aggs" : {
+        		"avg_review" : { "avg" : { "field" : "review" } }
+    		}
+	    }
+	res = es.search(index="driver", body=q)
+	print(res['hits']['total'])
+	print("Average review ", res['aggregations']['avg_review']['value'])
+	q = {
+  		'size':0,
+  		'query': { 'term': {'match': 'true'} },
+   		"aggs" : {
+        		"avg_price" : { "avg" : { "field" : "price" } }
+    		}
+	    }
+	res = es.search(index="driver", body=q)
+	print("Average price per mile", res['aggregations']['avg_price']['value'])
+
+
 
 def main():
     # print command line arguments
@@ -70,6 +101,8 @@ def main():
 		create_indices()
 	elif(sys.argv[1] == "rem"):
 		delete_indices()
+	elif(sys.argv[1] == "match"):
+		get_total_match()
 	else:
 		print("WRONG OPTIONS. PROVIDE add or rem option")
     else:

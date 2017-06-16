@@ -21,13 +21,13 @@ def extractEvent(x):
     }
 
 def storeDrivers(rdd):
-	cluster = ['ip-10-0-0-5', 'ip-10-0-0-6', 'ip-10-0-0-8', 'ip-10-0-0-10']
+	cluster = ['ip-10-0-0-4', 'ip-10-0-0-7', 'ip-10-0-0-14', 'ip-10-0-0-8']
 	es = Elasticsearch(cluster, http_auth=('elastic','changeme'))
 	for x in rdd:
 		es.create(index='driver',doc_type='alldriver',id=x[1],body=x[2])
 
 def storeSenders(rdd):
-	cluster = ['ip-10-0-0-5', 'ip-10-0-0-6', 'ip-10-0-0-8', 'ip-10-0-0-10']
+	cluster = ['ip-10-0-0-4', 'ip-10-0-0-7', 'ip-10-0-0-14', 'ip-10-0-0-8']
 	es = Elasticsearch(cluster, http_auth=('elastic','changeme'))
 	for x in rdd:
 		es.create(index='sender',doc_type='allsender',id=x[1],body=x[2])
@@ -51,7 +51,7 @@ def findsenders(x):
 
 	count = 0
 	  
-	cluster = ['ip-10-0-0-5', 'ip-10-0-0-6', 'ip-10-0-0-8', 'ip-10-0-0-10']
+	cluster = ['ip-10-0-0-4', 'ip-10-0-0-7', 'ip-10-0-0-14', 'ip-10-0-0-8']
 	es = Elasticsearch(cluster, http_auth=('elastic','changeme'))
 
 	sender_query = {
@@ -188,7 +188,7 @@ def finddriver(x):
  	for now store in the database
 	'''
 
-	cluster = ['ip-10-0-0-5', 'ip-10-0-0-6', 'ip-10-0-0-8', 'ip-10-0-0-10']
+	cluster = ['ip-10-0-0-4', 'ip-10-0-0-7', 'ip-10-0-0-14', 'ip-10-0-0-8']
 
 
 	es = Elasticsearch(cluster, http_auth=('elastic','changeme'))
@@ -302,7 +302,7 @@ def main():
 	ssc = StreamingContext(sc, 8)
 	sc.setLogLevel("WARN")    
 
-	cluster = ['ip-10-0-0-5', 'ip-10-0-0-6', 'ip-10-0-0-8', 'ip-10-0-0-10']
+	cluster = ['ip-10-0-0-4', 'ip-10-0-0-7', 'ip-10-0-0-14', 'ip-10-0-0-8']
     	brokers = ','.join(['{}:9092'.format(i) for i in cluster])
 
 	es = Elasticsearch(cluster, http_auth=('elastic','changeme'))
