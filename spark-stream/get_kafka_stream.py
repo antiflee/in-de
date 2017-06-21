@@ -7,6 +7,7 @@ from pyspark.streaming import StreamingContext
 from pyspark.streaming.kafka import KafkaUtils
 from elasticsearch import Elasticsearch
 from elasticsearch import helpers
+import redis
 
 offsetRanges = []
 
@@ -31,6 +32,34 @@ def storeSenders(rdd):
 	es = Elasticsearch(cluster, http_auth=('elastic','changeme'))
 	for x in rdd:
 		es.create(index='sender',doc_type='allsender',id=x[1],body=x[2])
+
+def secureResource(id,type):
+	redishost = 'ip-10-0-0-10'
+	redisport = 7326
+	redispasswd='1allsucks~2'
+	if(type == "driver"):
+		print("secureResource driver",id)
+		rs_db = redis.StrictRedis(host=redishost,  port=redisport, db=1, password=redispasswd)
+	else:
+		print("secureResource sender",id)
+		rs_db = redis.StrictRedis(host=redishost,  port=redisport, db=2,password=redispasswd)
+        #print "Driver: "+ str(driver)
+        if (str(rs_db.get(id)) == 'None'):
+		rs_db.set(id, 1)
+		return True
+
+	return False
+
+
+def commitResource(id,type):
+	redishost = 'ip-10-0-0-10'
+	redisport = 7326
+	redispasswd='1allsucks~2'
+	if(type == "driver"):
+		rs_db = redis.StrictRedis(host=redishost,  port=redisport, db=1, password=redispasswd)
+	else:
+		rs_db = redis.StrictRedis(host=redishost,  port=redisport, db=2,password=redispasswd)
+    	rs_db.set(id, 1)
 
 def findsenders(x):
 
@@ -112,19 +141,21 @@ def findsenders(x):
 	   ],
 	}
 
-
-
 	res = es.search(index="sender",doc_type="allsender",body=sender_query)
 
 	match_found = "false"
-	if(res["hits"]["total"] == 1 ):
-		print("found senders")
-		count = 1
-		match_found = "true"
-		senderid = res['hits']['hits'][0]["_source"]["id"];
-		doc = {"doc": {"match": "true"}}
-		res=es.update(index='sender',doc_type='allsender',id=senderid,body=json.dumps(doc),ignore=[409])
-		print("updated sender")
+	matchsize = len(res['hits']['hits'])
+	for i in range(matchsize): 
+		senderid = res['hits']['hits'][i]["_source"]["id"];
+		if(secureResource(senderid,'sender') == True):
+			print("found sender", senderid)
+			count = 1
+			match_found = "true"
+			doc = {"doc": {"match": "true"}}
+			res=es.update(index='sender',doc_type='allsender',id=senderid,body=json.dumps(doc),ignore=[409])
+			print("updated sender",senderid)
+			commitResource(x['id'],'driver')
+			break
 
 
 	'''
@@ -196,7 +227,7 @@ def finddriver(x):
 	print("created sender entry in elastic search")
 
 	driver_query = {
-		"from": 0, "size": 1,
+		"from": 0, "size": 5,
 		"query": {
 		"bool" : {
 			"must" : { "range": { "review" : {"gte": review }}},
@@ -258,14 +289,18 @@ def finddriver(x):
 	res = es.search(index="driver",doc_type="alldriver",body=driver_query)
 
 	match_found = "false"
-	if(res["hits"]["total"]):
-		print("found driver")
-		count = 1
-		match_found = "true"
-		driverid = res['hits']['hits'][0]["_source"]["id"];
-		doc = {"doc": {"match": "true"}}
-		res=es.update(index='driver',doc_type='alldriver',id=driverid,body=json.dumps(doc),ignore=[409])
-		print("updated driver")
+	matchsize = len(res['hits']['hits'])
+	for i in range(matchsize): 
+		driverid = res['hits']['hits'][i]["_source"]["id"];
+		if(secureResource(driverid,'driver') == True):
+			print("found driver", driverid)
+			count = 1
+			match_found = "true"
+			doc = {"doc": {"match": "true"}}
+			res=es.update(index='driver',doc_type='alldriver',id=driverid,body=json.dumps(doc),ignore=[409])
+			print("updated driver",driverid)
+			commitResource(x['id'],'sender')
+			break
 
 	sender_entry = {
 		'id': x['id'],
@@ -292,6 +327,15 @@ def printOffsetRanges(rdd):
     for o in offsetRanges:
         print("%s %s %s %s",o.topic,o.partition,o.fromOffset,o.untilOffset)
 
+def clearRadisCache():
+    redisDB = redis.StrictRedis(host=confParams['redis_host'],  port=confParams['redis_port'], db=confParams['driverDB'], \
+         password=confParams['redis_pwd'])
+    recordDB = redis.StrictRedis(host=confParams['redis_host'],  port=confParams['redis_port'], db=confParams['custReservRecord'], \
+         password=confParams['redis_pwd'])
+    redisDB.flushdb()
+    recordDB.flushdb()
+
+
 
 def main():
 	"""Runs and specifies map reduce jobs for streaming data. Data
@@ -303,6 +347,16 @@ def main():
 	sc.setLogLevel("WARN")    
 
 	cluster = ['ip-10-0-0-4', 'ip-10-0-0-7', 'ip-10-0-0-14', 'ip-10-0-0-8']
+	redishost = 'ip-10-0-0-10'
+	redisport = 7326
+	redispasswd='1allsucks~2'
+    	rs_driverdb = redis.StrictRedis(host=redishost,  port=redisport, db=1, password=redispasswd)
+    	rs_senderdb = redis.StrictRedis(host=redishost,  port=redisport, db=2, password=redispasswd)
+
+    	rs_driverdb.flushdb()
+    	rs_senderdb.flushdb()
+
+
     	brokers = ','.join(['{}:9092'.format(i) for i in cluster])
 
 	es = Elasticsearch(cluster, http_auth=('elastic','changeme'))

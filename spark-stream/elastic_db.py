@@ -1,13 +1,21 @@
 from elasticsearch import Elasticsearch
 import sys
+import redis
 
-cluster = ['ip-10-0-0-4', 'ip-10-0-0-7', 'ip-10-0-0-14', 'ip-10-0-0-8']
+cluster = ['ip-10-0-0-10', 'ip-10-0-0-7', 'ip-10-0-0-6', 'ip-10-0-0-8']
 
 '''
  include_in_all means there is _all index search do you want the field to be included in that
  or no. for text search it is useful otherwise you can have it removed to make things more efficient
 ''' 
-
+def flush_redis():
+	redishost = 'ip-10-0-0-10'
+	redisport = 7326
+	redispasswd='1allsucks~2'
+    	rs_driverdb = redis.StrictRedis(host=redishost,  port=redisport, db=1, password=redispasswd)
+    	rs_senderdb = redis.StrictRedis(host=redishost,  port=redisport, db=2, password=redispasswd)
+    	rs_driverdb.flushdb()
+    	rs_senderdb.flushdb()
 
 def create_indices():
 	print("creating driver and sender indices")
@@ -101,6 +109,8 @@ def main():
 		create_indices()
 	elif(sys.argv[1] == "rem"):
 		delete_indices()
+	elif(sys.argv[1] == "flush"):
+		flush_redis()
 	elif(sys.argv[1] == "match"):
 		get_total_match()
 	else:
