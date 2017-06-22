@@ -47,8 +47,7 @@ def get_stats():
 	'''
 	return render_template("stats.html", title = 'STATS', user = user)
 	'''
-  	user = { 'nickname': 'Miguel' } # fake user
-  	return render_template("bookCab.html", title = 'Home', user = user)
+  	return render_template("stats.html", title = 'Home', user = user)
 
 
 @app.route('/matches')
