@@ -1,5 +1,5 @@
-num_senders,10000
-num_drivers,10000
+num_senders,1
+num_drivers,1
 review,1,5
 senderspace,1,10
 driverspace 1,20
@@ -10,3 +10,4 @@ location1,36.677737,-121.655501
 location2,37.774929,-122.419416
 location3,38.581572,-121.494400
 location4,36.746842,-119.772587
+brokers,ip-10-0-0-10,ip-10-0-0-7,ip-10-0-0-6,ip-10-0-0-8
