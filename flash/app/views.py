@@ -43,6 +43,7 @@ def get_stats():
   	return render_template("stats.html", title = 'Home', user = user)
 
 # provide one sender and multiple drivers matched at a location
+# to ajax api 
 @app.route('/matches')
 def get_matches():
 	es = Elasticsearch(cluster, http_auth=('elastic','changeme'))
