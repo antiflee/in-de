@@ -1,5 +1,5 @@
 # Special Delivery
 Build Community One Package At A Time
-Here are the project slides along with dem </br>
+Here are the project slides along with demo </br>
 </br>
 [Project Slides](bit.ly/2s9L3SW)
