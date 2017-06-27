@@ -17,7 +17,7 @@ def index():
                  'sender': [37.79,  -122.437020]}
 	return render_template("index.html", title='Special Delivery', user = match)
 
-
+# get stats from aggregation api
 @app.route('/stats')
 def get_stats():
 	es = Elasticsearch(cluster, http_auth=('elastic','changeme'))
@@ -38,48 +38,69 @@ def get_stats():
     		}
 	    }
 	res2 = es.search(index="driver", body=q)
-	'''
-	jsonresponse = [{"MATCHED SENDERS": res1['hits']['total'] ,"AVG DRIVER REVIEW": res1['aggregations']['avg_review']['value'], "AVG PRICE PER MILE": res2['aggregations']['avg_price']['value']}]
-	return jsonify(jsonresponse)
-	'''
         user = {'match':res1['hits']['total'],'review':res1['aggregations']['avg_review']['value'],'price':res2['aggregations']['avg_price']['value']}
 
-	'''
-	return render_template("stats.html", title = 'STATS', user = user)
-	'''
   	return render_template("stats.html", title = 'Home', user = user)
 
-
+# provide one sender and multiple drivers matched at a location
 @app.route('/matches')
 def get_matches():
-	print("IN GET MATCHES")
 	es = Elasticsearch(cluster, http_auth=('elastic','changeme'))
-	print("IS connected to ES")
 
 	matches = { 'size': 1,
-	  'query' : { 'term' : { 'match' : 'true'}},
+	  'query' : {
+	  'bool' : {
+		'must': { 'term' : { 'match' : 'true'}},
+		'filter': {
+			 'geo_distance' : {
+				"distance" : "100km",
+				"distance_type": "plane",
+				"sloc" : {
+					"lat" : 36.746842,
+					"lon" : -119.772587
+				}
+			 }
+		 }
+	   }
+	  },
 	  'sort': [{ 'stime': { 'order': 'desc'}}]
 	}
+	 
 
 	res1 = es.search(index="sender", body=matches)
 	senderInfo = []
 	if(res1['hits']['total']):
 		senderInfo.append(res1['hits']['hits'][0]['_source']['sloc'])
-		print("JSON",json.dumps(senderInfo))
+		# print("JSON",json.dumps(senderInfo))
+
 
 	matches = { 'size': 5,
-	  'query' : { 'term' : { 'match' : 'true'}},
+	  'query' : {
+	  'bool' : {
+		'must': { 'term' : { 'match' : 'true'}},
+		'filter': {
+			 'geo_distance' : {
+				"distance" : "100km",
+				"distance_type": "plane",
+				"sloc" : {
+					"lat" : 36.746842,
+					"lon" : -119.772587
+				}
+			 }
+		 }
+	   }
+	  },
 	  'sort': [{ 'stime': { 'order': 'desc'}}]
 	}
 
 	res1 = es.search(index="driver", body=matches)
 	driverInfo = []
 	if(res1['hits']['total']):
-		for i in res1['hits']['hits']:
-			driverInfo.append(i['_source']['sloc'])
-	print("res1 total drivers",res1['hits']['total'])
+		for i in range(len(res1['hits']['hits'])):
+			driverInfo.append(res1['hits']['hits'][i]['_source']['sloc'])
+	# print("res1 total drivers",res1['hits']['total'])
 
-	print("JSON",json.dumps(driverInfo))
+	# print("JSON",json.dumps(driverInfo))
 	return (json.dumps({'snd': senderInfo,'drv':driverInfo}))
 
 
