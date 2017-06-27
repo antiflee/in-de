@@ -313,7 +313,7 @@ class EventProducer
 				brokers[1] = new String(elements[2]);
 				brokers[2] = new String(elements[3]);
 				brokers[3]  = new String(elements[4]);
-				System.out.println("brokers " + brokers[0] + brkers[1] + brokers[2] + brokers[3];
+				// System.out.println("brokers " + brokers[0] + brkers[1] + brokers[2] + brokers[3]);
 			}
 	   
 	    	}
@@ -430,13 +430,21 @@ class EventProducer
 		Collections.shuffle(drList, new Random(seed));
 		Collections.shuffle(drList, new Random(543440));
 		Collections.shuffle(drList);
+
 		for( DriverSender dr : drList)
 		{
 			if(dr.getType().equals("DRIVER"))
 				producer.send(new ProducerRecord<String,String>(this.driver_topic_name,dr.toString()));
 			else
 				producer.send(new ProducerRecord<String,String>(this.sender_topic_name,dr.toString()));
+			try {
+    				Thread.sleep(20);                 //1000 milliseconds is one second.
+			} catch(InterruptedException ex) {
+    				Thread.currentThread().interrupt();
+			}
+	
 		}
+	
 		System.out.println("prod_bulk_messages done");
 		
 	}
