@@ -10,19 +10,20 @@ cluster = ['ip-10-0-0-10', 'ip-10-0-0-7', 'ip-10-0-0-6', 'ip-10-0-0-8']
 ''' 
 def flush_redis():
 	redishost = 'ip-10-0-0-10'
-	redisport = 7326
-	redispasswd='1allsucks~2'
+	redisport = xxx 
+	redispasswd=xxx
     	rs_driverdb = redis.StrictRedis(host=redishost,  port=redisport, db=1, password=redispasswd)
     	rs_senderdb = redis.StrictRedis(host=redishost,  port=redisport, db=2, password=redispasswd)
     	rs_driverdb.flushdb()
     	rs_senderdb.flushdb()
 
+#create driver index
 def create_indices():
 	print("creating driver and sender indices")
 
 	driver_mapping = {
 	  'settings' : {
-		'number_of_shards' : 2,
+		'number_of_shards' : 10,
 		'number_of_replicas' : 2
 	  },
 	  'mappings': {
@@ -46,7 +47,7 @@ def create_indices():
 
 	sender_mapping = {
 	  'settings' : {
-		'number_of_shards' : 2,
+		'number_of_shards' : 10,
 		'number_of_replicas' : 2
 	  },
 	  'mappings': {
@@ -68,15 +69,18 @@ def create_indices():
 	es = Elasticsearch(cluster, http_auth=('elastic','changeme'))
 	es.indices.create(index="driver",body=driver_mapping);
 	es.indices.create(index="sender",body=sender_mapping);
-	print("created driver and sender indices")
+	# print("created driver and sender indices")
 
+# delete both driver and sender indices
 def delete_indices():
 	print("deleting driver and sender indices")
 	es = Elasticsearch(cluster, http_auth=('elastic','changeme'))
 	es.indices.delete(index='driver',ignore=[404,400])
 	es.indices.delete(index='sender',ignore=[404,400])
-	print("deleted driver and sender indices")
+	# print("deleted driver and sender indices")
 
+# get average review of matched drivers
+# get average price per mile
 def get_total_match():
 	print("total matches")
 	es = Elasticsearch(cluster, http_auth=('elastic','changeme'))
