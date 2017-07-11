@@ -38,7 +38,7 @@ Following feather improvements can be done. Some of the following were thought a
 
 Also here is the link to my main github repo which lists some of my other projects which also includes NLP based AI deeplearning model training.</br>
 
-[Main Github Repo]  https://github.com/cosmos342
+[Sandeep Bhat Github Repo]  https://github.com/cosmos342
 
 
 
