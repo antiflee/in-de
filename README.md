@@ -19,13 +19,18 @@ This project is about getting public involved in shipping packages to improve co
   * I tried to use elasticsearch update with query option. However elasticsearch was already proving to be a bottleneck and i came across that update interface is expensive. So I reasearched and came across Redis in memory database that i could use.
   * REDIS also provides a WATCH record lock system where a process can WATCH a record and make sure while it is writing the record if someone else already modified the record, then redis provides the notification for the same, and you could avoid matching with the same driver. This helped avoid overbooking and also helped improve performance as REDIS in memory database is very efficient for writing records
   
-# Improvements
+# Improvements for throughput and scale
 With more time on the project, i would look at the following improvements
 * Tune the indexing of elastic-search</br>
   * Elasticsearch does reverse indexing of the records to improve efficiency of query. We can turn-off fields that are not searched.
   * By default the index refresh time is 1 second which could be agressive. I would play with this time to a higher value at the same time, when bulk writes are made the indexing can be turned off and turned back on after the operation so that we are not blocked during bulk operation. 
 * Increment the number of cores(threads) of spark, i had 2 workers, i could increase more and probably that will help aswell, and if required we can also use more powerful amazon instances(i used m2.large) as the scale increases.
-* Play with spark streaming window time.
+* Play with spark streaming window time. I had time of 5 seconds. But if we could increase/decrease the window time if application timing requirements are okay to see if that helps improve throughput further
+* Scale and partitioning: Make sure, with partitioning of Redis and Elastic search are providing proper distribution of load in the cluster so that our queries and writes are efficient and are happening in memory so that we can scale and expand dynamically as we scale up.
+* Improve the efficiency of query by removing already matched queries(currently wasn't the focus for the duration of the 3 week project) by moving into another book keeping database instead of main database.
+* Even consider another database such as postgres which provides geosearch capability and could be more efficient. This could be a good option instead of elasticsearch as elasticsearch is efficient for textsearch and maynot be as efficient for non-text based search such as our application.
+# Feature improvement ideas
+Following feather improvements can be done
 
 
 
