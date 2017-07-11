@@ -30,7 +30,11 @@ With more time on the project, i would look at the following improvements
 * Improve the efficiency of query by removing already matched queries(currently wasn't the focus for the duration of the 3 week project) by moving into another book keeping database instead of main database.
 * Even consider another database such as postgres which provides geosearch capability and could be more efficient. This could be a good option instead of elasticsearch as elasticsearch is efficient for textsearch and maynot be as efficient for non-text based search such as our application.
 # Feature improvement ideas
-Following feather improvements can be done
+Following feather improvements can be done. Some of the following were thought about for the project but were not implemented due to time constraints.
+* Event generation:Currently the driver/sender events are generated based on random distribution for source/destination, price,review,distance(max distance driver would like to travel),time(time the package has to be delivered by). We can also use poisson distribution so that we can model driver/senders entering, leaving and reentering the system for more realistic scenario.
+* Multipoint pickup: Currently the pickup and dropoff is point to point. We can make this multipoint where driver could dropoff/pickup packages at transit points along his destination. We may also use SPF algorithm like DIJKSTRA's algorithm to find best matched drivers.
+* Reduce driving distance: One of the main goals of this platform is to reduce the driving distance a driver has to drive to pickup/dropoff packages. With elastic search currently geo-search is done by getting closest match to source and then these results are qualified by closest match to destination. This could have problem where the driver is closet to destination but not to source. This can be improved getting closest match to source and destination seperately and then adding the distance travelled at source and destination to get the driver based on minimum distance travelled. 
+
 
 
 
