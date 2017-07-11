@@ -18,4 +18,14 @@ This project is about getting public involved in shipping packages to improve co
   * When i was testing events over 6000 messages per second, i noticed that multiple senders(thorugh distributed spark cluster) could be matched up to the same driver which is incorrect and driver could get overbooked.
   * I tried to use elasticsearch update with query option. However elasticsearch was already proving to be a bottleneck and i came across that update interface is expensive. So I reasearched and came across Redis in memory database that i could use.
   * REDIS also provides a WATCH record lock system where a process can WATCH a record and make sure while it is writing the record if someone else already modified the record, then redis provides the notification for the same, and you could avoid matching with the same driver. This helped avoid overbooking and also helped improve performance as REDIS in memory database is very efficient for writing records
+  
+# Improvements
+With more time on the project, i would look at the following improvements
+* Tune the indexing of elastic-search</br>
+  * Elasticsearch does reverse indexing of the records to improve efficiency of query. We can turn-off fields that are not searched.
+  * By default the index refresh time is 1 second which could be agressive. I would play with this time to a higher value at the same time, when bulk writes are made the indexing can be turned off and turned back on after the operation so that we are not blocked during bulk operation. 
+* Increment the number of cores(threads) of spark, i had 2 workers, i could increase more and probably that will help aswell, and if required we can also use more powerful amazon instances(i used m2.large) as the scale increases.
+* Play with spark streaming window time.
+
+
 
