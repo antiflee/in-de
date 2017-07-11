@@ -28,6 +28,7 @@ With more time on the project, i would look at the following improvements
 * Play with spark streaming window time. I had time of 5 seconds. But if we could increase/decrease the window time if application timing requirements are okay to see if that helps improve throughput further
 * Scale and partitioning: Make sure, with partitioning of Redis and Elastic search are providing proper distribution of load in the cluster so that our queries and writes are efficient and are happening in memory so that we can scale and expand dynamically as we scale up.
 * Improve the efficiency of query by removing already matched queries(currently wasn't the focus for the duration of the 3 week project) by moving into another book keeping database instead of main database.
+* I would also tune the number of replication entries for the database  and play with failure of nodes to make sure, service is uninterrupted and fix any issues seen
 * Even consider another database such as POSTGRES which provides geosearch capability and could be more efficient. This could be a good option instead of elasticsearch as elasticsearch is efficient for textsearch and maynot be as efficient for non-text based search such as our application.
 # Feature improvement ideas
 Following feather improvements can be done. Some of the following were thought about for the project but were not implemented due to time constraints.
