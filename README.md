@@ -17,7 +17,7 @@ This project is about getting public involved in shipping packages to improve co
 * OVERBOOKING </br>
   * When i was testing events over 6000 messages per second, i noticed that multiple senders(thorugh distributed spark cluster) could be matched up to the same driver which is incorrect and driver could get overbooked.
   * I tried to use elasticsearch update with query option. However elasticsearch was already proving to be a bottleneck and i came across that update interface is expensive. So I reasearched and came across Redis in memory database that i could use.
-  * REDIS also provides a WATCH record lock system where a process can WATCH a record and make sure while it is writing the record if someone else already modified the record, then redis provides the notification for the same, and you could avoid matching with the same driver. This helped avoid overbooking and also helped improve performance as REDIS in memory database is very efficient for writing records
+  * REDIS also provides a WATCH record system where a process can WATCH a record and make sure while it is writing the record if someone else already modified the record, then redis provides the exception notification for the same, and you could avoid matching with the same driver. This helped avoid overbooking and also helped improve performance as REDIS in memory database is very efficient for writing records
   
 # Improvements for throughput and scale
 With more time on the project, i would look at the following improvements
