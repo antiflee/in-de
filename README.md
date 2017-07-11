@@ -37,6 +37,7 @@ Following feather improvements can be done. Some of the following were thought a
 * We can implement further queries to support, best rated driver in a given area. Drivers by maximum trips/revenues. Driver's who are most active and others to monitor the various parameters.
 * Efficient Review feedback: Currently the reviews are based on the 5 * system. To keep this type of platform more efficient we can implement text based review system. There may be a driver who did really good or a driver we damaged/stole the package and these can be captured in text based review system, and rating of such drivers can be made more appropriate according to the feedback they receive. We can run the text through deep learning NLP models based on LSTM(Long Short Term Memory) for sentiment analysis and also we can do classification such as driver is great/stole packages/delivered on time. This can be done on senders as well. This model can be run in real time for prediction and batch processing pipeline can be setup to train the model offline and keep the inline prediction model updated time to time to keep it latest and current. This will help improve the efficiency of platform in terms of user behavior and provide reward system. 
 Also here is the link to my main github repo which lists some of my other porjects which also includes NLP based AI deeplearning model training.
+[Main Github Repo]https://github.com/cosmos342
 
 
 
