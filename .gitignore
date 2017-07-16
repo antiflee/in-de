@@ -1,0 +1,9 @@
+./spark_stream/reset.sh
+./spark_stream/run1.sh
+./spark_stream/run2.sh
+./spark_stream/run.sh
+./kafka/SimpleConsumer.java
+./kafka/rundr.sh
+./kafka/runsr.sh
+./kafka/runblk.sh
+./kafka/com.sh
