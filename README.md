@@ -9,7 +9,7 @@ This project is about getting public involved in shipping packages to improve co
 * There may be a person nearby who is going to the destination you want to send the package to and could deliver it for you.
 * By involving public, we can reduce the cost of the transport, improve service and help environment Which is what Special Delivery project is set out to achieve!
 
-# SOURCE CODE STRUCTURE
+# Source Code Structure
  * kafka directory has DriverSender.java for simulating driver/sender events
  * spark-stream directory has get_kafka_stream.py for processing events in sparkstreaming context and interaction with elasticdb and redis
  * spark-stream directory also has elastic_db.py for creating/cleaning up indexes
