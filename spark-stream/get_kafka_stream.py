@@ -5,79 +5,9 @@ import json
 from pyspark import SparkContext, SparkConf
 from pyspark.streaming import StreamingContext
 from pyspark.streaming.kafka import KafkaUtils
-from elasticsearch import Elasticsearch
-from elasticsearch import helpers
 import argparse
-import redis
-
-#elastic db for storing driver/sender records and query in bulk
-class ElasticDB:
-
-	def __init__(self):
-		cluster = ['ip-10-0-0-10', 'ip-10-0-0-7', 'ip-10-0-0-6', 'ip-10-0-0-8']
-		self.es = Elasticsearch(cluster, http_auth=('elastic','changeme'))
-
-	def store_bulk(self,inlist):
-		helpers.bulk(self.es,inlist)
-	
-	def bulk_search(self,inindex,querylist):
-		return self.es.msearch(index=inindex,search_type='query_and_fetch',body=querylist)
-
-	def update_record(self,index_name,indoc_type, driver_id,doc):
-		return self.es.update(index=index_name,doc_type=indoc_type,id=driver_id,body=doc,ignore=[409])
-
-
-#redisdb to store matches in an atomic way using multi transaction mechanism
-class RedisDB:
-
-	def __init__(self):
-		self.redishost = 'ip-10-0-0-10'
-		self.redisport = xxxx
-		self.redispasswd = xxxx
-    		self.rs_driverdb = redis.StrictRedis(host=self.redishost,  port=self.redisport, db=1, password=self.redispasswd)
-    		self.rs_senderdb = redis.StrictRedis(host=self.redishost,  port=self.redisport, db=2, password=self.redispasswd)
-
-	def flushdb(self):
-		# print("callingflushdb")
-		self.rs_driverdb.flushdb()
-		self.rs_driverdb.flushdb()
-
-	# secure driver or sender resource in redis
-	def secure_driver_util(self,driverid):
-
-		# redis watch transaction ensures that 
-		# the record we want to write if claimed by some else
-		# we get notified so to avoid overbooking scenario
-		ret_val = False
-		
-		pipe = self.rs_driverdb.pipeline()
-		pipe.watch(driverid)
-		if (str(self.rs_driverdb.get(driverid)) == 'None'):
-			pipe.multi()
-			pipe.set(driverid, 1)
-			try: 
-				pipe.execute()
-				ret_val = True
-			except:
-				ret_val = False
-
-		return ret_val
-
-	# helper function claim driver upon match
-	def secure_best_driver(self,driverList):
-		id_idx = 0
-		for driver in driverList:
-			# print "Driver: "+ str(driver)
-			if(secure_driver_util(driver['id'],'driver',r_db) == True):
-					return (driver, id_idx)
-			id_idx = id_idx + 1
-
-		return ('None', -1)
-
-	# commit sender record
-	def commit_sender(self,id):
-   		self.rs_senderdb.set(id, 1)
-
+from elastic_db import ElasticDB
+from redis_db import RedisDB
 
 
 #decode driver information
@@ -281,7 +211,7 @@ def main():
 	parser=parser.parse_args()
 
 	rdb = RedisDB()
-	rdb.flushdb()
+	rdb.flush_db()
 
 
 	sc = SparkContext(appName="SpecialDelivery")
