@@ -6,8 +6,8 @@ class RedisDB:
 
 	def __init__(self):
 		self.redishost = 'ip-10-0-0-10'
-		self.redisport = 7326
-		self.redispasswd = '1allsucks~2'
+		self.redisport = xxxx
+		self.redispasswd = xxxx
     		self.rs_driverdb = redis.StrictRedis(host=self.redishost,  port=self.redisport, db=1, password=self.redispasswd)
     		self.rs_senderdb = redis.StrictRedis(host=self.redishost,  port=self.redisport, db=2, password=self.redispasswd)
 
