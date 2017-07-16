@@ -11,7 +11,7 @@ This project is about getting public involved in shipping packages to improve co
 
 # Source Code Structure
  * kafka directory has DriverSender.java for simulating driver/sender events
- * spark-stream directory has get_kafka_stream.py for processing events in sparkstreaming context and interaction with elasticdb and redis
+ * spark-stream directory has get_kafka_stream.py for processing events in sparkstreaming context and interaction with elasticsearch and redis
  * spark-stream directory  has elastic_db.py wrapper class to access ELASTICSEARCH
  * spark-stream directory  has redis_db.py- wrapper class to access REDIS
 
